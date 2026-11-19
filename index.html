@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Dino Mix Run</title>
+<meta name="description" content="Corra com o dino por desertos, florestas, cidades, neve e espaço. Funciona offline e dá para instalar!">
+<meta name="theme-color" content="#0b1630">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dino Mix">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  html,body{margin:0;height:100%;background:#0b1630;overflow:hidden;overscroll-behavior:none;
+    font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:#fff}
+  body{display:flex;align-items:center;justify-content:center}
+  #wrap{position:relative;width:min(100vw,calc(100vh * 900 / 320));width:min(100vw,calc(100dvh * 900 / 320));
+    aspect-ratio:900/320;background:#000;touch-action:none;box-shadow:0 10px 40px #0008;border-radius:clamp(0px,1vw,14px);overflow:hidden}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .panel{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;background:linear-gradient(#0b163099,#0b1630cc);padding:2%;gap:.5%;font-size:clamp(9px,1.75vw,18px)}
+  .panel.on{display:flex}
+  h1{margin:0;font-size:2.2em;letter-spacing:.04em;text-shadow:0 .08em 0 #1f7a45,0 .16em .3em #0008;line-height:1}
+  h1 span{color:#ffd34d}
+  p{margin:.2em 0;opacity:.92}
+  .sub{font-size:1.05em}
+  .row{display:flex;gap:.8em;align-items:center;justify-content:center;flex-wrap:wrap}
+  button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:.55em 1.5em;cursor:pointer;color:#fff;
+    background:linear-gradient(#4fd477,#2fa95a);box-shadow:0 .25em 0 #1f7a45,0 .5em .8em #0006;transition:transform .08s}
+  button:active{transform:translateY(.15em);box-shadow:0 .1em 0 #1f7a45}
+  button.alt{background:linear-gradient(#6a7bd8,#4a58b0);box-shadow:0 .25em 0 #2f3a80,0 .5em .8em #0006}
+  button.big{font-size:1.35em;padding:.4em 1.8em}
+  #hero{height:5.6em;filter:drop-shadow(0 .3em .2em #0007);animation:bob .7s ease-in-out infinite alternate}
+  @keyframes bob{to{transform:translateY(-.35em)}}
+  .strip{display:flex;gap:.9em;align-items:flex-end;justify-content:center;height:2.1em}
+  .strip img{height:100%;width:auto;filter:drop-shadow(0 .15em .1em #0006)}
+  .stats{display:flex;gap:1.6em;font-size:1.2em;margin:.3em 0}
+  .stats b{display:block;font-size:1.6em;color:#ffd34d}
+  #newrec{color:#ffd34d;font-weight:800;font-size:1.3em;animation:bob .4s infinite alternate}
+  .hint{font-size:.85em;opacity:.8}
+  #topbtns{position:absolute;top:2%;left:1.5%;display:none;gap:.5em;z-index:3}
+  #topbtns.on{display:flex}
+  #topbtns button{padding:.25em .7em;font-size:clamp(12px,2.4vw,20px);background:#0b163099;box-shadow:none;border:2px solid #fff4}
+  #duck{position:absolute;left:2%;bottom:5%;width:15%;aspect-ratio:1.7;display:none;z-index:3;font-size:clamp(12px,3vw,26px);
+    background:#0b163099;border:3px solid #fff5;box-shadow:none;border-radius:1em;opacity:.8;padding:0}
+  #duck.on{display:block}
+  #iosHint{display:none}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+
+  <div id="topbtns"><button id="btnPause" aria-label="Pausar">⏸</button></div>
+  <button id="duck" aria-label="Agachar">⬇ agachar</button>
+
+  <div class="panel on" id="loading"><h1>Dino <span>Mix</span> Run</h1><p>Carregando imagens…</p></div>
+
+  <div class="panel" id="menu">
+    <img id="hero" src="img/dino-run1.svg" alt="Dino">
+    <h1>Dino <span>Mix</span> Run</h1>
+    <p class="sub">Deserto, floresta, cidade, neve e espaço — um mundo novo a cada trecho!</p>
+    <div class="strip">
+      <img src="img/obs-cactus.svg" alt=""><img src="img/obs-log.svg" alt=""><img src="img/obs-cone.svg" alt="">
+      <img src="img/obs-snowman.svg" alt=""><img src="img/obs-crystal.svg" alt=""><img src="img/coin.svg" alt="">
+    </div>
+    <div class="row">
+      <button class="big" id="btnPlay">▶ Jogar</button>
+      <button class="alt" id="btnInstall" hidden>📲 Instalar app</button>
+      <button class="alt" id="btnSound">🔊 Som: ligado</button>
+    </div>
+    <p class="hint">Espaço / ↑ / toque = pular (segure para pular mais alto) · ↓ = agachar · P = pausar</p>
+    <p class="hint" id="iosHint">No iPhone/iPad: toque em <b>Compartilhar</b> → <b>Adicionar à Tela de Início</b>.</p>
+    <p class="hint" id="bestMenu"></p>
+  </div>
+
+  <div class="panel" id="paused">
+    <h1>Pausado</h1>
+    <div class="row"><button class="big" id="btnResume">▶ Continuar</button></div>
+  </div>
+
+  <div class="panel" id="over">
+    <h1>Ops! <span>Bateu!</span></h1>
+    <div id="newrec" hidden>🏆 Novo recorde!</div>
+    <div class="stats">
+      <div>Pontos<b id="oScore">0</b></div>
+      <div>Recorde<b id="oBest">0</b></div>
+      <div>Moedas<b id="oCoins">0</b></div>
+      <div>Chegou em<b id="oWorld" style="font-size:1.2em">—</b></div>
+    </div>
+    <div class="row"><button class="big" id="btnAgain">↻ Jogar de novo</button><button class="alt" id="btnHome">Menu</button></div>
+  </div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
